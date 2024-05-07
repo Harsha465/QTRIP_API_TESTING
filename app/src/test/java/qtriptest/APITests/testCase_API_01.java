@@ -13,8 +13,39 @@ import io.restassured.RestAssured;
 import java.util.UUID;
 
 
-
+@Test(groups= {"API Tests"})
 public class testCase_API_01 {
     
-   
+   public void testcase_01(){
+    RestAssured.baseURI = "https://content-qtripdynamic-qa-backend.azurewebsites.net";
+        RestAssured.basePath = "/api/v1/register";
+
+        JSONObject obj = new JSONObject();
+
+        String email = "harsha_konda" + UUID.randomUUID() + "@gmail.com";
+        String password = UUID.randomUUID().toString();
+        String confirmpassword = password;
+
+        obj.put("email",email);
+        obj.put("password",password);
+        obj.put("confirmpassword",confirmpassword);
+
+        Response resp = RestAssured.given().contentType("application/json").
+        body(obj.toString()).log().all().when().post();
+        
+        Assert.assertEquals(resp.getStatusCode(), 201);
+
+        // Login API call
+        RestAssured.basePath = "/api/v1/login";
+        obj.remove("confirmpassword");
+        resp = RestAssured.given().contentType("application/json").body(obj.toString()).log().all().when().post();
+
+        Assert.assertEquals(resp.getStatusCode(), 201);
+        JsonPath jp = new JsonPath(resp.body().asString());
+
+        Assert.assertTrue(jp.getBoolean("success"));
+        Assert.assertNotNull(jp.get("data.token"));
+        Assert.assertNotNull(jp.get("data.id"));
+
+   }
 }
